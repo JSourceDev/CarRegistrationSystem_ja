@@ -32,8 +32,33 @@ public class DBlogic {
         return connection;
     }
 
+    // Checks if registration number already exists (case-insensitive)
+    public boolean registrationNumberExists(String registrationNumber) {
+        
+        String sql = "SELECT 1 FROM cars WHERE LOWER(registration_number) = LOWER(?) LIMIT 1";
+
+    try (Connection conn = connect();
+         PreparedStatement pst = conn.prepareStatement(sql)) {
+
+        pst.setString(1, registrationNumber.trim());
+        try (ResultSet rs = pst.executeQuery()) {
+            return rs.next();
+        }
+
+    } catch (SQLException e) {
+        System.err.println("Error while checking registration number: " + e.getMessage());
+         // Safer default: doesn't allow to insert if we cannot verify the duplicates
+        return true;
+    }
+}
+
     //CREATE car
     public boolean insertCar(String brand, String model, Integer year, String registration_number) {
+
+        //Blocks duplicate before inserting car
+        if (registrationNumberExists(registration_number)) {
+            return false;
+}
 
         String sql = "INSERT INTO cars (brand, model, year, registration_number) VALUES (?, ?, ?, ?)";
 
@@ -90,9 +115,33 @@ public class DBlogic {
 
     }
 
+    // Checks if registration number exists for a different car 
+public boolean registrationNumberExistsForOtherCar(int carId, String registrationNumber) {
+    String sql = "SELECT 1 FROM cars WHERE LOWER(registration_number) = LOWER(?) AND id <> ? LIMIT 1";
+
+    try (Connection conn = connect();
+         PreparedStatement pst = conn.prepareStatement(sql)) {
+
+        pst.setString(1, registrationNumber.trim());
+        pst.setInt(2, carId);
+
+        try (ResultSet rs = pst.executeQuery()) {
+            return rs.next();
+        }
+
+    } catch (SQLException e) {
+        System.err.println("Error while checking registration number for update: " + e.getMessage());
+        return true;
+    }
+}
+
 
     //UPDATE car (by ID)
     public boolean updateCar(int id, String brand, String model, Integer year, String registration_number) {
+
+        if (registrationNumberExistsForOtherCar(id, registration_number)) {
+            return false;
+}
 
         String sql = "UPDATE cars SET brand =?, model = ?, year = ?, registration_number = ? WHERE id = ?";
 
