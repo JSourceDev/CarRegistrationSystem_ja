@@ -172,7 +172,12 @@ public class CarRegistryAppGUI extends JFrame {
 
         if (!brand.isEmpty() && !model.isEmpty() && !year.isEmpty() && !regNumber.isEmpty()) {
             try {
-                boolean addedToDB = db.insertCar(brand, model, Integer.parseInt(year), regNumber);
+                 // Check for duplicate registration number before inserting into DB
+                if (db.registrationNumberExists(regNumber)) {
+                    JOptionPane.showMessageDialog(this, "This registration number already exists!", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            boolean addedToDB = db.insertCar(brand, model, Integer.parseInt(year), regNumber);
                 if (addedToDB) {
                     loadCarsFromDB();
                     clearForm();
@@ -206,6 +211,11 @@ public class CarRegistryAppGUI extends JFrame {
         }
 
         try {
+            // Check for duplicate registration number before updating car information into DB
+            if (db.registrationNumberExistsForOtherCar(selectedCarId, regNumber)) {
+            JOptionPane.showMessageDialog(this, "This registration number already exists for another car!", JOptionPane.WARNING_MESSAGE);
+        return;
+}
             int year = Integer.parseInt(yearStr);
             boolean updated = db.updateCar(selectedCarId, brand, model, year, regNumber);
 
