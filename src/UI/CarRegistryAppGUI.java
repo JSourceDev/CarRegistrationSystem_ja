@@ -177,7 +177,18 @@ public class CarRegistryAppGUI extends JFrame {
                     JOptionPane.showMessageDialog(this, "This registration number already exists!", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-            boolean addedToDB = db.insertCar(brand, model, Integer.parseInt(year), regNumber);
+           // Validation for car year range     
+           int parsedYear = Integer.parseInt(year);
+
+                int currentYear = java.time.Year.now().getValue();
+                if (parsedYear < 1886 || parsedYear > currentYear + 1) {
+                    JOptionPane.showMessageDialog(this, "Invalid year value.", "Invalid year", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                boolean addedToDB = db.insertCar(|
+                    brand, model, parsedYear, regNumber);
+                
                 if (addedToDB) {
                     loadCarsFromDB();
                     clearForm();
@@ -211,12 +222,21 @@ public class CarRegistryAppGUI extends JFrame {
         }
 
         try {
+              // Again car year range validation
+              int year = Integer.parseInt(yearStr);
+
+                int currentYear = java.time.Year.now().getValue();
+                if (year < 1886 || year > currentYear + 1) {
+                    JOptionPane.showMessageDialog(this, "Invalid year value.", "Invalid year", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            
             // Check for duplicate registration number before updating car information into DB
             if (db.registrationNumberExistsForOtherCar(selectedCarId, regNumber)) {
-            JOptionPane.showMessageDialog(this, "This registration number already exists for another car!", JOptionPane.WARNING_MESSAGE);
-        return;
-}
-            int year = Integer.parseInt(yearStr);
+                JOptionPane.showMessageDialog(this, "This registration number already exists for another car!", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
             boolean updated = db.updateCar(selectedCarId, brand, model, year, regNumber);
 
             if (updated) {
